@@ -1,0 +1,113 @@
+/*
+ * Hoja de Estilos QSS para la App de Panadería
+ * (Sintaxis similar a CSS)
+ */
+
+/* Estilo general de la ventana y pestañas */
+QWidget, QMainWindow {
+    background-color: #2e3440; /* Fondo oscuro */
+    color: #eceff4;           /* Texto claro */
+    font-family: Arial, sans-serif;
+}
+
+/* Estilo de las Pestañas */
+QTabWidget::pane {
+    border-top: 2px solid #4c566a;
+}
+
+QTabBar::tab {
+    background: #3b4252;
+    color: #d8dee9;
+    padding: 10px 15px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background: #434c5e;
+    color: #eceff4;
+    border-bottom: 2px solid #88c0d0; /* Acento azul en la pestaña activa */
+}
+
+QTabBar::tab:!selected:hover {
+    background: #4c566a;
+}
+
+/* Estilo de Botones */
+QPushButton {
+    background-color: #5e81ac; /* Azul */
+    color: #ffffff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #81a1c1; /* Azul más claro al pasar el mouse */
+}
+
+QPushButton:pressed {
+    background-color: #4c566a; /* Color al presionar */
+}
+
+/* Estilo del botón de "Reset" (Peligroso) */
+#BtnResetDiario {
+    background-color: #bf616a; /* Rojo */
+}
+
+#BtnResetDiario:hover {
+    background-color: #d08770; /* Naranja/Rojo claro */
+}
+
+
+/* Estilo de Campos de Entrada */
+QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+    background-color: #3b4252;
+    color: #eceff4;
+    border: 1px solid #4c566a;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+/* Estilo de las Tablas */
+QTableWidget {
+    background-color: #3b4252;
+    color: #eceff4;
+    gridline-color: #4c566a;
+    border: 1px solid #4c566a;
+}
+
+QTableWidget::item:selected {
+    background-color: #5e81ac; /* Azul de selección */
+    color: #ffffff;
+}
+
+/* Encabezados de la Tabla */
+QHeaderView::section {
+    background-color: #434c5e;
+    color: #eceff4;
+    padding: 5px;
+    border: 1px solid #4c566a;
+    font-weight: bold;
+}
+
+/* Checkbox */
+QCheckBox {
+    color: #eceff4;
+}
+
+QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
+}
+
+/* Labels (Etiquetas) */
+QLabel {
+    color: #eceff4;
+    padding: 2px;
+}
