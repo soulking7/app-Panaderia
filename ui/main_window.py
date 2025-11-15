@@ -23,14 +23,14 @@ except ImportError:
 
 # --- Importar nuestro propio código ---
 from core.database import DatabaseManager
-# Importamos los NUEVOS diálogos
-from .dialogs import PagoDialog, CierreDialog
-# --- 4. INTERFAZ GRÁFICA PRINCIPAL (PYQT6) ---
+# Importamos TODOS los diálogos
+from .dialogs import PagoDialog, CierreDialog, InputDialog
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Sistema de Gestión de Panadería (v2.0 - Cierre Diario)")
+        self.setWindowTitle("Sistema de Gestión de Panadería (v2.1 - Pago Proveedor)")
         self.setGeometry(100, 100, 1000, 700)
         
         self.db = DatabaseManager()
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
         self.init_cierres_ui() # Nueva pestaña de cierres
         self.init_stock_ui()
         self.init_personal_ui() # Modificada
-        self.init_proveedores_ui()
+        self.init_proveedores_ui() # Modificada
         self.init_reportes_ui() # Modificada
 
         # Cargar datos iniciales
@@ -130,7 +130,6 @@ class MainWindow(QMainWindow):
 
     # --- PESTAÑA 2: STOCK (Sin cambios lógicos) ---
     def init_stock_ui(self):
-# ... (código existente sin cambios) ...
         main_layout = QHBoxLayout(self.tab_stock)
         
         # --- Columna Izquierda: Formularios ---
@@ -276,26 +275,25 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(form_col, 1)
         main_layout.addLayout(table_col, 2)
 
-    # --- PESTAÑA 4: PROVEEDORES (Sin cambios lógicos) ---
+    # --- PESTAÑA 4: PROVEEDORES (MODIFICADA) ---
     def init_proveedores_ui(self):
-# ... (código existente sin cambios) ...
         main_layout = QHBoxLayout(self.tab_proveedores)
         
         # --- Columna Izquierda: Formularios ---
         form_col = QVBoxLayout()
         
+        # Formulario de Nuevo Proveedor
         form_nuevo = QFormLayout()
         form_nuevo.setContentsMargins(10, 10, 10, 10)
         self.prov_entry_nombre = QLineEdit()
         self.prov_entry_contacto = QLineEdit()
         self.prov_entry_producto = QLineEdit()
-        self.prov_spin_pago = QDoubleSpinBox()
-        self.prov_spin_pago.setRange(0.00, 99999.99)
+        # CAMBIO: Eliminado self.prov_spin_pago
         
         form_nuevo.addRow("Nombre:", self.prov_entry_nombre)
         form_nuevo.addRow("Contacto (Tel/Email):", self.prov_entry_contacto)
         form_nuevo.addRow("Producto que Suministra:", self.prov_entry_producto)
-        form_nuevo.addRow("Pago Mensual (Estimado):", self.prov_spin_pago)
+        # CAMBIO: Eliminada fila de "Pago Mensual"
         
         self.btn_agregar_proveedor = QPushButton(" Agregar Proveedor")
         icon_add_prov = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton)
@@ -314,8 +312,9 @@ class MainWindow(QMainWindow):
         self.prov_check_ver_inactivos.stateChanged.connect(self.refresh_table_proveedores)
         
         self.table_proveedores = QTableWidget()
-        self.table_prov_headers = ["ID", "Nombre", "Contacto", "Suministro", "Pago Mensual", "Activo"]
-        self.table_proveedores.setColumnCount(len(self.table_prov_headers))
+        # CAMBIO: Eliminada columna "Pago Mensual"
+        self.table_prov_headers = ["ID", "Nombre", "Contacto", "Suministro", "Activo"]
+        self.table_proveedores.setColumnCount(len(self.table_prov_headers)) # Ajustado a 5
         self.table_proveedores.setHorizontalHeaderLabels(self.table_prov_headers)
         self.table_proveedores.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table_proveedores.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -327,7 +326,8 @@ class MainWindow(QMainWindow):
         self.btn_toggle_activo_prov.setIcon(QIcon(icon_archive_prov))
         self.btn_toggle_activo_prov.clicked.connect(self.slot_toggle_proveedor)
         
-        self.btn_pagar_proveedor = QPushButton(" Registrar Pago a Seleccionado")
+        # CAMBIO: Texto del botón ajustado
+        self.btn_pagar_proveedor = QPushButton(" Registrar Pago (Factura)")
         icon_pay_prov = self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton)
         self.btn_pagar_proveedor.setIcon(QIcon(icon_pay_prov))
         self.btn_pagar_proveedor.clicked.connect(self.slot_pagar_proveedor)
@@ -384,7 +384,7 @@ class MainWindow(QMainWindow):
     # --- SLOTS (Lógica de la Aplicación) ---
 
     def _show_message(self, titulo, mensaje, tipo="info"):
-# ... (código existente sin cambios) ...
+        """Función helper para mostrar mensajes."""
         msgBox = QMessageBox(self)
         msgBox.setWindowTitle(titulo)
         msgBox.setText(mensaje)
@@ -432,7 +432,9 @@ class MainWindow(QMainWindow):
     # --- Slots de Productos y Stock ---
     
     def refresh_combobox_productos(self):
+        """Recarga los combobox de productos en Pestaña Ventas y Pestaña Stock."""
         productos = self.db.get_productos(ver_ocultos=False)
+        
         self.stock_combo_producto_prod.clear()
         
         if not productos:
@@ -447,7 +449,7 @@ class MainWindow(QMainWindow):
         ver_ocultos = self.stock_check_ver_ocultos.isChecked()
         productos = self.db.get_productos(ver_ocultos)
         
-        self.table_productos.setRowCount(0) 
+        self.table_productos.setRowCount(0) # Limpiar tabla
         for i, prod in enumerate(productos):
             self.table_productos.insertRow(i)
             self.table_productos.setItem(i, 0, QTableWidgetItem(str(prod['id_prod'])))
@@ -455,13 +457,14 @@ class MainWindow(QMainWindow):
             self.table_productos.setItem(i, 2, QTableWidgetItem(f"${prod['precio']:.2f}"))
             self.table_productos.setItem(i, 3, QTableWidgetItem(str(prod['stock'])))
             self.table_productos.setItem(i, 4, QTableWidgetItem(str(prod['produccion_dia'])))
+            # self.table_productos.setItem(i, 5, QTableWidgetItem(str(prod['vendido_dia']))) # Ya no es relevante aquí
             self.table_productos.setItem(i, 5, QTableWidgetItem("Sí" if prod['es_gaseosa'] else "No"))
             self.table_productos.setItem(i, 6, QTableWidgetItem("Sí" if prod['oculto'] else "No"))
         
+        # Ocultar la columna ID (es útil tenerla pero no verla)
         self.table_productos.setColumnHidden(0, True)
 
     def slot_agregar_producto(self):
-# ... (código existente sin cambios) ...
         nombre = self.stock_entry_nombre.text()
         precio = self.stock_spin_precio.value()
         stock = self.stock_spin_stock_inicial.value()
@@ -475,10 +478,12 @@ class MainWindow(QMainWindow):
         
         if success:
             self._show_message("Éxito", message)
+            # Limpiar formulario
             self.stock_entry_nombre.clear()
             self.stock_spin_precio.setValue(0.01)
             self.stock_spin_stock_inicial.setValue(0)
             self.stock_check_gaseosa.setChecked(False)
+            # Actualizar vistas
             self.refresh_table_productos()
             self.refresh_combobox_productos()
         else:
@@ -490,26 +495,11 @@ class MainWindow(QMainWindow):
             self._show_message("Error", "Seleccione un producto.", "error")
             return
         
-        # Usamos el diálogo simple de la v1 (que sigue en dialogs.py)
-        # Necesitamos importar el diálogo simple que borramos de dialogs.py
-        # Lo recreamos aquí temporalmente o lo re-añadimos a dialogs.py
-        # Por simplicidad, lo re-definiré aquí brevemente:
-        
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Registrar Producción/Compra")
-        layout = QVBoxLayout(dialog)
-        label = QLabel("Cantidad a agregar:")
-        spinbox = QSpinBox()
-        spinbox.setRange(1, 9999)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(label)
-        layout.addWidget(spinbox)
-        layout.addWidget(buttons)
+        # CAMBIO: Usar el InputDialog importado
+        dialog = InputDialog(self, "Registrar Producción/Compra", "Cantidad a agregar:")
         
         if dialog.exec():
-            cantidad = spinbox.value()
+            cantidad = dialog.get_value()
             success, message = self.db.update_produccion_stock(id_prod, cantidad)
             if success:
                 self._show_message("Éxito", message)
@@ -519,16 +509,17 @@ class MainWindow(QMainWindow):
                 self._show_message("Error", message, "error")
 
     def _get_selected_id(self, tabla):
-# ... (código existente sin cambios) ...
+        """Helper para obtener el ID de la fila seleccionada."""
         selected_rows = tabla.selectionModel().selectedRows()
         if not selected_rows:
             self._show_message("Error", "No ha seleccionado ninguna fila.", "error")
             return None
+        
+        # El ID está en la columna 0 (oculta)
         id_item = tabla.item(selected_rows[0].row(), 0)
         return int(id_item.text())
 
     def slot_toggle_producto(self):
-# ... (código existente sin cambios) ...
         id_prod = self._get_selected_id(self.table_productos)
         if id_prod:
             success, message = self.db.toggle_producto_oculto(id_prod)
@@ -580,7 +571,6 @@ class MainWindow(QMainWindow):
             self._show_message("Error", message, "error")
 
     def slot_toggle_trabajador(self):
-# ... (código existente sin cambios) ...
         id_trab = self._get_selected_id(self.table_trabajadores)
         if id_trab:
             success, message = self.db.toggle_trabajador_activo(id_trab)
@@ -613,10 +603,9 @@ class MainWindow(QMainWindow):
             else:
                 self._show_message("Error", message, "error")
 
-    # --- Slots de Proveedores (Sin cambios lógicos) ---
+    # --- Slots de Proveedores (MODIFICADOS) ---
 
     def refresh_table_proveedores(self):
-# ... (código existente sin cambios) ...
         ver_inactivos = self.prov_check_ver_inactivos.isChecked()
         proveedores = self.db.get_proveedores(ver_inactivos)
         
@@ -627,35 +616,34 @@ class MainWindow(QMainWindow):
             self.table_proveedores.setItem(i, 1, QTableWidgetItem(prov['nombre']))
             self.table_proveedores.setItem(i, 2, QTableWidgetItem(prov['contacto']))
             self.table_proveedores.setItem(i, 3, QTableWidgetItem(prov['producto_suministrado']))
-            self.table_proveedores.setItem(i, 4, QTableWidgetItem(f"${prov['pago_mensual']:.2f}"))
-            self.table_proveedores.setItem(i, 5, QTableWidgetItem("Sí" if prov['activo'] else "No"))
+            # CAMBIO: La columna 4 ahora es "Activo"
+            self.table_proveedores.setItem(i, 4, QTableWidgetItem("Sí" if prov['activo'] else "No"))
         
         self.table_proveedores.setColumnHidden(0, True)
 
     def slot_agregar_proveedor(self):
-# ... (código existente sin cambios) ...
         nombre = self.prov_entry_nombre.text()
         contacto = self.prov_entry_contacto.text()
         producto = self.prov_entry_producto.text()
-        pago = self.prov_spin_pago.value()
+        # CAMBIO: Eliminado 'pago'
         
         if not nombre:
             self._show_message("Error", "El nombre es obligatorio.", "error")
             return
-            
-        success, message = self.db.add_proveedor(nombre, contacto, producto, pago)
+        
+        # CAMBIO: Llamada a DB modificada
+        success, message = self.db.add_proveedor(nombre, contacto, producto)
         if success:
             self._show_message("Éxito", message)
             self.prov_entry_nombre.clear()
             self.prov_entry_contacto.clear()
             self.prov_entry_producto.clear()
-            self.prov_spin_pago.setValue(0)
+            # CAMBIO: Eliminado spin_pago.setValue(0)
             self.refresh_table_proveedores()
         else:
             self._show_message("Error", message, "error")
 
     def slot_toggle_proveedor(self):
-# ... (código existente sin cambios) ...
         id_prov = self._get_selected_id(self.table_proveedores)
         if id_prov:
             success, message = self.db.toggle_proveedor_activo(id_prov)
@@ -665,7 +653,6 @@ class MainWindow(QMainWindow):
                 self._show_message("Error", message, "error")
                 
     def slot_pagar_proveedor(self):
-# ... (código existente sin cambios) ...
         id_prov = self._get_selected_id(self.table_proveedores)
         if not id_prov:
             return
@@ -673,22 +660,12 @@ class MainWindow(QMainWindow):
         row = self.table_proveedores.selectionModel().selectedRows()[0].row()
         nombre = self.table_proveedores.item(row, 1).text()
         
-        # Re-creando el diálogo simple
-        dialog = QDialog(self)
-        dialog.setWindowTitle(f"Pagar a {nombre}")
-        layout = QVBoxLayout(dialog)
-        label = QLabel("Monto a Pagar:")
-        spinbox = QSpinBox()
-        spinbox.setRange(1, 99999)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(label)
-        layout.addWidget(spinbox)
-        layout.addWidget(buttons)
+        # CAMBIO: Usar el InputDialog importado
+        dialog = InputDialog(self, f"Pagar a {nombre}", "Monto a Pagar (Factura):")
+        dialog.spinbox.setRange(1, 99999) # Establecer rango
         
         if dialog.exec():
-            monto = spinbox.value()
+            monto = dialog.get_value()
             success, message = self.db.registrar_pago_proveedor(id_prov, nombre, monto)
             if success:
                 self._show_message("Éxito", message)
@@ -698,7 +675,6 @@ class MainWindow(QMainWindow):
     # --- Slots de Reportes y Cierre (MODIFICADOS) ---
     
     def slot_exportar_excel(self):
-        # ... (Lógica sin cambios, pero ahora usa get_datos_reporte_ventas modificado)
         if not REPORTES_ENABLED:
             self._show_message("Error", "Bibliotecas de reportes no instaladas.", "error")
             return
@@ -719,7 +695,6 @@ class MainWindow(QMainWindow):
             self._show_message("Error de Exportación", f"No se pudo guardar el archivo Excel.\nError: {e}", "error")
 
     def slot_generar_grafico(self):
-        # ... (Lógica sin cambios, pero ahora usa get_datos_grafico_ventas modificado)
         if not REPORTES_ENABLED:
             self._show_message("Error", "Bibliotecas de gráficos no instaladas.", "error")
             return
@@ -776,7 +751,7 @@ class MainWindow(QMainWindow):
                     self._show_message("Error en Cierre", message, "error")
 
     def closeEvent(self, event):
-# ... (código existente sin cambios) ...
+        """Sobrescribe el evento de cierre para cerrar la DB."""
         self.db.close()
         print("Conexión a la base de datos cerrada.")
         event.accept()

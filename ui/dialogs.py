@@ -3,8 +3,35 @@ from PyQt6.QtWidgets import (
     QDoubleSpinBox, QFormLayout, QScrollArea, QWidget
 )
 
+class InputDialog(QDialog):
+    """Diálogo simple para pedir una cantidad."""
+    def __init__(self, parent=None, titulo="Ingresar Valor", etiqueta="Cantidad:"):
+        super().__init__(parent)
+        self.setWindowTitle(titulo)
+        
+        self.layout = QVBoxLayout(self)
+        self.label = QLabel(etiqueta)
+        self.spinbox = QSpinBox(self)
+        self.spinbox.setRange(1, 9999)
+        
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.spinbox)
+        
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
+            self
+        )
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        
+        self.layout.addWidget(self.buttons)
+
+    def get_value(self):
+        return self.spinbox.value()
+
 class PagoDialog(QDialog):
     """Diálogo para registrar un pago a un trabajador."""
+# ... (código existente sin cambios) ...
     def __init__(self, nombre_trabajador, salario_sugerido, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"Registrar Pago a {nombre_trabajador}")
@@ -31,6 +58,7 @@ class PagoDialog(QDialog):
         self.layout.addRow(self.buttons)
 
     def get_values(self):
+# ... (código existente sin cambios) ...
         return {
             "monto": self.spin_monto.value(),
             "tipo_pago": self.combo_tipo_pago.currentText()
@@ -38,6 +66,7 @@ class PagoDialog(QDialog):
 
 class CierreDialog(QDialog):
     """Diálogo para ingresar el conteo final de stock."""
+# ... (código existente sin cambios) ...
     def __init__(self, productos, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Realizar Cierre de Día - Conteo Final")
@@ -82,6 +111,7 @@ class CierreDialog(QDialog):
         self.layout.addWidget(self.buttons)
 
     def get_conteo_final(self):
+# ... (código existente sin cambios) ...
         conteo = {}
         for id_prod, spinbox in self.spinboxes.items():
             conteo[id_prod] = spinbox.value()
